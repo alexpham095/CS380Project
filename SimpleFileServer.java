@@ -1,3 +1,4 @@
+package src;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -7,6 +8,8 @@ public class SimpleFileServer {
   public final static int SOCKET_PORT = 13267;  // you may change this
   public final static String FILE_TO_SEND = "/home/client/Documents/send.txt";  // you may change this
 
+  public static String key = "key.txt";
+  public  static Encryption encryptor;
 	public final static String validUser = "danielchow";
 	public final static String validPassword = "fourfourfourfour";
 	public static BufferedReader input = null;
@@ -33,6 +36,7 @@ public class SimpleFileServer {
 			}
 			
           File myFile = new File (FILE_TO_SEND);
+          encryptor =  new Encryption(myFile, key);
           byte [] mybytearray  = new byte [(int)myFile.length()];
           fis = new FileInputStream(myFile);
           bis = new BufferedInputStream(fis);
