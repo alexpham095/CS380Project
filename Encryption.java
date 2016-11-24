@@ -5,6 +5,7 @@
  */
 package src;
 import java.io.*;
+import java.nio.ByteBuffer;
 
 /**
  *
@@ -14,6 +15,7 @@ public class Encryption {
 	
 	private static Key keyGenerator;
 	private static byte[] key;
+	private static int chunkCounter;
 	
 	public Encryption(File file, String key) throws IOException{
 		keyGenerator = new Key(key);
@@ -22,9 +24,8 @@ public class Encryption {
     }
     
     public static void splitFile(File f) throws IOException {
-        int partCounter = 1;//I like to name parts from 001, 002, 003, ...
-                            //you can change it to 0 if you want 000, 001, ...
-
+        int chunkCounter = 0;
+        
         int sizeOfFiles = 1024 * 1024;// 1MB
         byte[] buffer = new byte[sizeOfFiles];
 
@@ -36,7 +37,7 @@ public class Encryption {
             while ((tmp = bis.read(buffer)) > 0) {
                 //write each chunk of data into separate file with different number in name
                 File newFile = new File(f.getParent(), name + "."
-                        + String.format("%03d", partCounter++));
+                        + String.format("%03d", chunkCounter++));
                 try (FileOutputStream out = new FileOutputStream(newFile)) {
                 	
                     out.write(buffer, 0, tmp);//tmp is chunk size
@@ -46,25 +47,22 @@ public class Encryption {
     }
 
     
-    public static void hash(byte[] x){
+    public static int hash(byte[] x){
         int result = 0;
         
         for(int i = 0; i < x.length; i++){
             result = (result*199 + x[i])%1000;
         }
-        System.out.println("result is: " + result);
+        return result;
         
     }
     
-    public static byte[] encrypt(String data) throws IOException{ //data = name of the file to send
-    	RandomAccessFile in = new RandomAccessFile(data, "r");
-    	byte [] input = new byte[(int) in.length()];	//input = actual data
-		in.readFully(input);
-		
-        byte[] result = new byte[input.length];
+    public static byte[] encryptHash(int x) throws IOException{ //data = name of the file to send
+		byte[] bytes = ByteBuffer.allocate(4).putInt(x).array();
+        byte[] result = new byte[bytes.length];
         int i = 0, j =0;
-        while(i != input.length){
-            result[i] = (byte)(key[j] ^ input[i]);
+        while(i != bytes.length){
+            result[i] = (byte)(key[j] ^ bytes[i]);
             i++;
             j++;
             if(j == key.length){
@@ -74,6 +72,34 @@ public class Encryption {
         
        return result;
         
+    }
+    
+    public static byte[] encryptChunk(byte[] data) throws IOException{ //data = name of the file to send
+
+          byte[] result = new byte[data.length];
+          int i = 0, j =0;
+          while(i != data.length){
+              result[i] = (byte)(key[j] ^ data[i]);
+              i++;
+              j++;
+              if(j == key.length){
+                  j = 0;
+              }      
+          }
+          
+         return result;
+          
+      }
+    
+    public byte[] change(String data) throws IOException{
+    	RandomAccessFile in = new RandomAccessFile(data, "r");
+    	byte[] input = new byte[(int) in.length()];
+    	in.readFully(input);
+    	return input;
+    }
+    
+    public int getChunkCounter(){
+    	return chunkCounter;
     }
     
 }
