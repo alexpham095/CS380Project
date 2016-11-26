@@ -1,4 +1,3 @@
-package src;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -6,12 +5,12 @@ import java.net.Socket;
 public class SimpleFileServer {
 
   public final static int SOCKET_PORT = 13267;  // you may change this
-  public final static String FILE_TO_SEND = "/home/client/Documents/send.txt";  // you may change this
+  public final static String FILE_TO_SEND = "/home/server/Desktop/cs380/send.txt";  // you may change this
 
   public static String key = "key.txt";
   public  static Encryption encryptor;
-	public final static String validUser = "danielchow";
-	public final static String validPassword = "fourfourfourfour";
+	public final static String validUser = "mark";
+	public final static String validPassword = "ilog";
 	public static BufferedReader input = null;
 	public static PrintWriter output = null;
     public static Socket sock = null;
@@ -25,6 +24,7 @@ public class SimpleFileServer {
       servsock = new ServerSocket(SOCKET_PORT);
       while (true) {
         System.out.println("Waiting...");
+        int chunkCounter =  0;
         try {
           sock = servsock.accept();
           System.out.println("Accepted connection : " + sock);
@@ -38,12 +38,15 @@ public class SimpleFileServer {
           File myFile = new File (FILE_TO_SEND);
           encryptor =  new Encryption(myFile, key);
           
-          int chunkCounter =  0;
+	  System.out.println(encryptor.getChunkCounter());
           while(chunkCounter < encryptor.getChunkCounter()){							//chunk be pushed one at a time
+
+	  System.out.println("HI");
         	byte[] chunkByteArray = encryptor.encryptChunk(encryptor.change(FILE_TO_SEND + "." + String.format("%03d", chunkCounter)));
         	System.out.println("Sending " + FILE_TO_SEND + "." + String.format("%03d", chunkCounter) + "\n(" + chunkByteArray.length + " bytes)");  
-            chunkCounter++;
-            os = sock.getOutputStream();
+           	chunkCounter++;
+           	os = sock.getOutputStream();
+		System.out.println("ChunkByteLength: " +chunkByteArray.length);
           	os.write(chunkByteArray, 0, chunkByteArray.length);
           	os.flush();
           }

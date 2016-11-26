@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package src;
 import java.io.*;
 import java.nio.ByteBuffer;
 
@@ -20,24 +19,25 @@ public class Encryption {
 	public Encryption(File file, String key) throws IOException{
 		keyGenerator = new Key(key);
 		this.key = keyGenerator.getKey();
+		chunkCounter = 0;
     	splitFile(file);
     }
     
     public static void splitFile(File f) throws IOException {
-        int chunkCounter = 0;
         
-        int sizeOfFiles = 1024 * 1024;// 1MB
+        int sizeOfFiles = 4;// 1MB
         byte[] buffer = new byte[sizeOfFiles];
-
         try (BufferedInputStream bis = new BufferedInputStream(
                 new FileInputStream(f))) {
             String name = f.getName();
-
+	System.out.println("Split: " + chunkCounter);
             int tmp = 0;
             while ((tmp = bis.read(buffer)) > 0) {
                 //write each chunk of data into separate file with different number in name
                 File newFile = new File(f.getParent(), name + "."
                         + String.format("%03d", chunkCounter++));
+
+	System.out.println("Split: " + chunkCounter);
                 try (FileOutputStream out = new FileOutputStream(newFile)) {
                 	
                     out.write(buffer, 0, tmp);//tmp is chunk size
@@ -75,10 +75,12 @@ public class Encryption {
     }
     
     public static byte[] encryptChunk(byte[] data) throws IOException{ //data = name of the file to send
-
+	System.out.println(data.length);
           byte[] result = new byte[data.length];
           int i = 0, j =0;
           while(i != data.length){
+
+	System.out.println(data.length);
               result[i] = (byte)(key[j] ^ data[i]);
               i++;
               j++;
@@ -101,5 +103,6 @@ public class Encryption {
     public int getChunkCounter(){
     	return chunkCounter;
     }
+
     
 }
