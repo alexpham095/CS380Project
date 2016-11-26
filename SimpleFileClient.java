@@ -1,3 +1,4 @@
+package encryption;
 import java.util.Scanner;
 import java.io.*;
 import java.net.*;
@@ -48,6 +49,7 @@ public class SimpleFileClient {
   			decryptor = new Decryption(key); 				//init decryption
   		int totalBytes = 0; 								//used to count total bytes of file
   		int byteRead = -1;									//used to store next byte in inputstream
+  		boolean fail = false;
   		do{
   			for(int i = 0; i < 256; i++){					//conditional value is predetermined chunk size!!!
   				byteRead = is.read();						//reads next byte, .read() returns -1 if not byte is found
@@ -59,6 +61,20 @@ public class SimpleFileClient {
   				decrypted[j] = receivedChunks.get(j);		//stores undecrypted version to decrypted
   			}
   			decrypted = decryptor.decrypt(decrypted); 		//decrypts decrypted
+  			String s = new String(decrypted);
+  			String[] result = s.split("%%");				//split string
+  			byte[] hashable = result[3].getBytes();			//get data to hash
+  			hashable = decryptor.hash(hashable);			//Hash
+  			String hashed = new String(hashable);
+  			if(Integer.parseInt(result[0]) != 256){			//compare size of chunk
+  				fail = true;
+  			}
+  			else if(Integer.parseInt(result[1]) != decrypted.length){ //compare full size of file
+  				fail = true;
+  			}
+  			else if( hashed != result[2] ){					//compare Hash
+  				fail = true;
+  			}
   			bos.write(decrypted,0,decrypted.length); 		//writes decrypted chunk to buffered output stream
   			bos.flush();									//empties out buffered output stream
   			totalBytes += receivedChunks.size();			//counter for total bytes

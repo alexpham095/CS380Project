@@ -34,7 +34,7 @@ public class Encryption {
     	  head = head.concat("%%" + fileSize + "%%");		//concat filesize with markers
     	  byte[] input = changeHash(f);
     	  String hash = new String(hash(input));		
-    	  head = head.concat(hash);
+    	  head = head.concat(hash + "%%");
     	  byte[] header = head.getBytes();
     	  
           String name = f.getName();
