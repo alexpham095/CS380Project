@@ -25,21 +25,18 @@ public class Encryption {
     
     public static void splitFile(File f) throws IOException {
         
-        int sizeOfFiles = 4;// 1MB
+        int sizeOfFiles = 256;// 1MB
         byte[] buffer = new byte[sizeOfFiles];
         try (BufferedInputStream bis = new BufferedInputStream(
                 new FileInputStream(f))) {
             String name = f.getName();
-	System.out.println("Split: " + chunkCounter);
             int tmp = 0;
             while ((tmp = bis.read(buffer)) > 0) {
+		String filePath = f.getCanonicalPath().substring(0,f.getCanonicalPath().lastIndexOf(File.separator));
                 //write each chunk of data into separate file with different number in name
-                File newFile = new File(f.getParent(), name + "."
+                File newFile = new File(filePath + "/.temp/", name + "."
                         + String.format("%03d", chunkCounter++));
-
-	System.out.println("Split: " + chunkCounter);
                 try (FileOutputStream out = new FileOutputStream(newFile)) {
-                	
                     out.write(buffer, 0, tmp);//tmp is chunk size
                 }
             }
@@ -75,12 +72,10 @@ public class Encryption {
     }
     
     public static byte[] encryptChunk(byte[] data) throws IOException{ //data = name of the file to send
-	System.out.println(data.length);
           byte[] result = new byte[data.length];
           int i = 0, j =0;
           while(i != data.length){
 
-	System.out.println(data.length);
               result[i] = (byte)(key[j] ^ data[i]);
               i++;
               j++;

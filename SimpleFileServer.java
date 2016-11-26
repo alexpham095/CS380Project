@@ -5,9 +5,9 @@ import java.net.Socket;
 public class SimpleFileServer {
 
   public final static int SOCKET_PORT = 13267;  // you may change this
-  public final static String FILE_TO_SEND = "/home/server/Desktop/cs380/send.txt";  // you may change this
+  public static String FILE_TO_SEND;  // you may change this
 
-  public static String key = "key.txt";
+  public static String key;
   public  static Encryption encryptor;
 	public final static String validUser = "mark";
 	public final static String validPassword = "ilog";
@@ -16,6 +16,8 @@ public class SimpleFileServer {
     public static Socket sock = null;
 
   public static void main (String [] args ) throws IOException {
+	FILE_TO_SEND = args[0];
+	key = args[1];
     FileInputStream fis = null;
     BufferedInputStream bis = null;
     OutputStream os = null;
@@ -36,28 +38,25 @@ public class SimpleFileServer {
 			}
 			
           File myFile = new File (FILE_TO_SEND);
+  	  String filePath =  myFile.getCanonicalPath().substring(0, 
+		myFile.getCanonicalPath().lastIndexOf(File.separator));
           encryptor =  new Encryption(myFile, key);
-          
-	  System.out.println(encryptor.getChunkCounter());
-          while(chunkCounter < encryptor.getChunkCounter()){							//chunk be pushed one at a time
-
-	  System.out.println("HI");
-        	byte[] chunkByteArray = encryptor.encryptChunk(encryptor.change(FILE_TO_SEND + "." + String.format("%03d", chunkCounter)));
-        	System.out.println("Sending " + FILE_TO_SEND + "." + String.format("%03d", chunkCounter) + "\n(" + chunkByteArray.length + " bytes)");  
+          int totalBytes = 0;
+          while(chunkCounter < encryptor.getChunkCounter()){
+        	byte[] chunkByteArray = encryptor.encryptChunk(encryptor.change(filePath + 
+			"/.temp/" +FILE_TO_SEND + "." + String.format("%03d", chunkCounter)));
+        	System.out.println("Sending " + filePath + 
+			"/.temp/" + FILE_TO_SEND + "." + String.format("%03d", chunkCounter) + "(" + chunkByteArray.length + " bytes)");  
            	chunkCounter++;
            	os = sock.getOutputStream();
-		System.out.println("ChunkByteLength: " +chunkByteArray.length);
           	os.write(chunkByteArray, 0, chunkByteArray.length);
           	os.flush();
+		totalBytes += chunkByteArray.length;
           }
-          //fis = new FileInputStream(myFile);
-          //bis = new BufferedInputStream(fis);
-         // bis.read(mybytearray,0,mybytearray.length);
-         // os = sock.getOutputStream();
-         // System.out.println("Sending " + FILE_TO_SEND + "(" + mybytearray.length + " bytes)");
-          //os.write(mybytearray,0,mybytearray.length);
-          //os.flush();
-          System.out.println("Done.");
+	System.out.println("\n***************************************************\n***************************************************");
+          System.out.println("Sent: " + FILE_TO_SEND + "\n(" + totalBytes + " bytes)");  
+          System.out.println("Done!");
+	System.out.println("***************************************************\n***************************************************\n");
         }
         finally {
           if (bis != null) bis.close();
@@ -76,7 +75,6 @@ public class SimpleFileServer {
 		String username = input.readLine(); 
 		System.out.println("SERVER USER LOGIN: " + username );
 		String password = input.readLine();
-		System.out.println("SERVER USER PASSWORD: " + password);
 		if(username.equals(validUser) && password.equals(validPassword))
 			System.out.println("Welcome " + validUser + "!");
 		else
