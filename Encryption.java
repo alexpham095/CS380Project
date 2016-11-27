@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 import java.io.*;
 import java.nio.ByteBuffer;
 
@@ -27,26 +26,30 @@ public class Encryption {
     
     public static void splitFile(File f) throws IOException {
       int sizeOfFiles = 256;                                //used to change size of chunks
-      byte[] buffer = new byte[sizeOfFiles];
+      
+	int l = 0;
       try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(f))) {
-    	  String head = Integer.toString(sizeOfFiles);		//string to concat and has the chunk size 
     	  String fileSize = Long.toString(f.length());		//filesize
-    	  head = head.concat("%%" + fileSize + "%%");		//concat filesize with markers
-    	  byte[] input = changeHash(f);
-    	  String hash = new String(hash(input));		
-    	  head = head.concat(hash + "%%");
-    	  byte[] header = head.getBytes();
-    	  
+    	  byte[] buffer = new byte[sizeOfFiles];
           String name = f.getName();
           int tmp = 0;
-          int tmpH = header.length;
           while ((tmp = bis.read(buffer)) > 0) {
             String filePath = f.getCanonicalPath().substring(0,f.getCanonicalPath().lastIndexOf(File.separator)); //gets canonical path of original file
             //write each chunk of data into separate file with different number in name
               File newFile = new File(filePath + "/.temp/", name + "." + String.format("%03d", chunkCounter++));  //stores in a .temp file for orginaztion purposes
-              try (FileOutputStream out = new FileOutputStream(newFile)) {
-            	out.write(header, 0, tmpH);			   //Header output
-                out.write(buffer, tmpH, tmp);             //outputs chunks to files
+ 	   
+              try (FileOutputStream out = new FileOutputStream(newFile)) { 
+		byte[] ph = new byte[tmp];
+		for(int i = 0; i<tmp; i++){
+			ph[i] = buffer[i];
+		}
+		String hash = new String(hash(ph));		
+		String head = Integer.toString(tmp) + "%%" + fileSize + "%%" + hash + "%%";		//string to concat and has the chunk size 
+    	 	byte[] header = head.getBytes();
+
+		System.out.println("Chunk with header size: " + (header.length+tmp));
+		out.write(header,0,header.length);
+                out.write(buffer, 0, tmp);             //outputs chunks to files
 	            }
 	        }
 	    }
@@ -60,6 +63,8 @@ public class Encryption {
 	        result = (result*199 + x[i])%1000;
 	    }
 	    byte[] bytes = ByteBuffer.allocate(4).putInt(result).array();
+		String hashed = new String(bytes);
+		System.out.println(hashed);
 	    return bytes;
 	
 	}
