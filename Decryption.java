@@ -1,6 +1,8 @@
+package encryption;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 
 public class Decryption {
 
@@ -25,5 +27,16 @@ public class Decryption {
 
     return result;
 
-}
+	}
+	
+	public static byte[] hash(byte[] x){
+	    int result = 0;
+	
+	    for(int i = 0; i < x.length; i++){
+	        result = (result*199 + x[i])%1000;
+	    }
+	    byte[] bytes = ByteBuffer.allocate(4).putInt(result).array();
+	    return bytes;
+	
+	}
 }
