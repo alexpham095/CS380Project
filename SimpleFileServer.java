@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.concurrent.TimeUnit;
+import java.util.Scanner;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -10,8 +11,6 @@ public class SimpleFileServer {
 
   public static String key;
   public  static Encryption encryptor;
-  public final static String validUser = "mark";
-  public final static String validPassword = "ilog";
   public static BufferedReader input = null;
   public static PrintWriter output = null;
   public static Socket sock = null;
@@ -21,6 +20,8 @@ public class SimpleFileServer {
 	private static boolean login = false;
 	private static boolean asciiArmor = false;
 	private static ObjectOutputStream os;
+	private static String db = "database.txt";
+	private static boolean cont = false;
 
 
   public static void main (String [] args ) throws IOException {
@@ -36,7 +37,8 @@ public class SimpleFileServer {
         sock = servsock.accept();                                 //waits for a client, creates a socket once one is found
 os = new ObjectOutputStream(sock.getOutputStream());                             //init socket output stream
         System.out.println("Accepted connection : " + sock);      //prints out client info
-        try{
+	        
+	try{
           logInfo();                                              //verifies client as a valid user
         } catch(Exception e) {
          e.printStackTrace();
@@ -83,7 +85,7 @@ os = new ObjectOutputStream(sock.getOutputStream());                            
 		os.flush();
 		}
 	}
-     }
+	}
      finally {
       //closes everything
       if (bis != null) bis.close();
@@ -99,9 +101,14 @@ finally {
 }
       //verifies client as a valid user//
       ///////////////////////////////////
-public static void logInfo() throws Exception{            
-  input = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-  String username = input.readLine(); 
+public static void logInfo() throws Exception{
+	File users = new File(db);            
+	Scanner userReader = new Scanner(users);
+	String validUser = userReader.nextLine();
+	String validPassword = userReader.nextLine();
+  
+  input = new BufferedReader(new InputStreamReader(sock.getInputStream()));	
+String username = input.readLine(); 
   System.out.println("SERVER USER LOGIN: " + username );
   String password = input.readLine();
   if(username.equals(validUser) && password.equals(validPassword)){
