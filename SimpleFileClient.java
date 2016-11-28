@@ -21,6 +21,7 @@
 		public static int totalReceivedSize = 0;
 		private static boolean asciiArmor = false;
 		private static boolean succession = false;
+		private static boolean decrypt = false;
 
 	  public static void main (String [] args ) throws Exception {
 	  	SERVER = args[0]; 					//ip address of server
@@ -70,6 +71,14 @@
 			else
 				asciiArmor = false;
 			output.println(ascii);
+			output.flush();
+			System.out.println("Would you like to decrypt the file?");			
+			String decode = reader.nextLine();
+			if(decode.equals("y"))
+				decrypt = true;
+			else
+				decrypt = false;
+			output.println(decode);
 			output.flush();
 	  		/////////
 				long start = System.currentTimeMillis();
