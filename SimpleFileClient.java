@@ -4,6 +4,7 @@
 	import java.net.Socket;
 	import javax.swing.JOptionPane;
 	import java.util.ArrayList;
+	import java.util.concurrent.TimeUnit;
 
 	public class SimpleFileClient {
 
@@ -18,6 +19,7 @@
 	  public static Decryption decryptor;
 	  public static ArrayList<Byte> receivedChunks =  new ArrayList<Byte>(); //needs to be ArrayList since the size will be dynamic
 		public static int totalReceivedSize = 0;
+		private static boolean asciiArmor = false;
 
 	  public static void main (String [] args ) throws Exception {
 	  	SERVER = args[0]; 					//ip address of server
@@ -39,8 +41,7 @@
 	  		output.println(username);
 	  		String password = new String(console.readPassword("Enter Password: "));
 	  		output.println(password);
-	  		output.flush();
-	  		/////////
+			output.flush();
 
 	  		//Receiving chunks//
 	  		ObjectInputStream is = new ObjectInputStream(sock.getInputStream()); 			//receives any input from predetermined socket
@@ -49,16 +50,30 @@
 	  			decryptor = new Decryption(key); 				//init decryption
 	  		int totalBytes = 0; 								//used to count total bytes of file
 	  		int byteRead = -1;									//used to store next byte in inputstream
-			int receivedBytes = 0;
+			int receivedBytes = 0;	
 	  		boolean chunkSizeFail = false;
 			boolean hashFail = false;
 			boolean fail = false;
 			boolean exit = false;
 			Object temp;
+			byte[] validation = (byte[])is.readObject();
+			String x = new String(validation);			
+			System.out.println(x);
+			String ascii = reader.nextLine();
+			if(ascii.equals("y"))
+				asciiArmor = true;
+			else
+				asciiArmor = false;
+			output.println(ascii);
+			output.flush();
+	  		/////////
+				long start = System.currentTimeMillis();
 	  			do{					//conditional value is predetermined chunk size!!!
 					try{
 						temp = is.readObject();	  				
-						byte[] receivedChunk  = (byte[])temp;						//reads next byte, .read() returns -1 if not byte is found
+			 			byte[] receivedChunk  = (byte[])temp;						//reads next byte, .read() returns -1 if not byte is found
+						if(asciiArmor)
+							decryptor.asciiDecode(receivedChunk);
 						byte[] decrypted = decryptor.decrypt(receivedChunk);
 						String s = new String(decrypted);
 						//System.out.println(s);
@@ -93,10 +108,14 @@
 						exit = true;					
 					}	 
 	  			}while(!exit);
-	  			if(totalBytes == receivedBytes)
-					System.out.println("Successfully downloaded file " + FILE_TO_RECEIVED  + " downloaded (" + totalBytes + " bytes  / " + receivedBytes+ " bytes )");
+				long end = System.currentTimeMillis();
+				long totalTime = TimeUnit.MILLISECONDS.toSeconds(end-start);
+	  			if(totalBytes == receivedBytes && (receivedBytes + totalBytes) != 0){
+					System.out.println("Successfully downloaded file into " + FILE_TO_RECEIVED  + " downloaded! \n(" + totalBytes + " bytes  / " + receivedBytes+ " bytes )" + " Ascii Armored: " +asciiArmor);
+					System.out.println("\nCompleted in " + totalTime + " seconds");
+}
 				else
-					System.out.println("Failed to received full file! ( " + totalBytes + " bytes downloaded / " + receivedBytes + " bytes expected)!");
+					System.out.println("Failed to received file! ( " +  totalBytes + " bytes downloaded / " + receivedBytes + " bytes expected)!");
 	
 					
 	  			
