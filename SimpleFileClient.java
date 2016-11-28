@@ -20,6 +20,7 @@
 	  public static ArrayList<Byte> receivedChunks =  new ArrayList<Byte>(); //needs to be ArrayList since the size will be dynamic
 		public static int totalReceivedSize = 0;
 		private static boolean asciiArmor = false;
+		private static boolean succession = false;
 
 	  public static void main (String [] args ) throws Exception {
 	  	SERVER = args[0]; 					//ip address of server
@@ -30,13 +31,17 @@
 	  	FileOutputStream fos = null;
 	  	BufferedOutputStream bos = null;
 	  	Socket sock = null;
-	  	try {
+	  	
+		try {
+			int p = 0;
+			while(!succession && p<3){ 
 	  		sock = new Socket(SERVER, SOCKET_PORT);				//attempts to connect to predetermined server with predetermined port
-
+	ObjectInputStream is = new ObjectInputStream(sock.getInputStream()); 			
 	  		//Attempts to login//
 	  		System.out.println("Connecting...");
 	  		output = new PrintWriter(new OutputStreamWriter(sock.getOutputStream()));
-	  		System.out.println("Enter Username: ");
+		 		
+			System.out.println("Enter Username: ");
 	  		String username = reader.nextLine();
 	  		output.println(username);
 	  		String password = new String(console.readPassword("Enter Password: "));
@@ -44,7 +49,7 @@
 			output.flush();
 
 	  		//Receiving chunks//
-	  		ObjectInputStream is = new ObjectInputStream(sock.getInputStream()); 			//receives any input from predetermined socket
+	  	//receives any input from predetermined socket
 	  		fos = new FileOutputStream(FILE_TO_RECEIVED);  		//will output the chunks to a file
 	  		bos = new BufferedOutputStream(fos); 				//will output bytes to file output
 	  			decryptor = new Decryption(key); 				//init decryption
@@ -98,12 +103,11 @@
 							bos.flush();
 						}
 						else{
-							if(chunkSizeFail)
-								System.out.println("Chunk size incorrect!");
-							if(hashFail)
-								System.out.println("Hash incorrect!");
+	//						if(chunkSizeFail)
+							//	System.out.println("Chunk size incorrect!");
+	//						if(hashFail)
+							//	System.out.println("Hash incorrect!");
 						}
-								
 					}catch (Exception e){
 						exit = true;					
 					}	 
@@ -113,12 +117,17 @@
 	  			if(totalBytes == receivedBytes && (receivedBytes + totalBytes) != 0){
 					System.out.println("Successfully downloaded file into " + FILE_TO_RECEIVED  + " downloaded! \n(" + totalBytes + " bytes  / " + receivedBytes+ " bytes )" + " Ascii Armored: " +asciiArmor);
 					System.out.println("\nCompleted in " + totalTime + " seconds");
+					succession = true;
 }
-				else
-					System.out.println("Failed to received file! ( " +  totalBytes + " bytes downloaded / " + receivedBytes + " bytes expected)!");
-	
-					
-	  			
+				else{
+					System.out.println("Failed to received file! ( " +  totalBytes + " bytes downloaded / " + receivedBytes + " bytes expected)!\nAttempt: " + (p+1) + " (up to three tries)" );
+					if(p==2)
+						System.out.println("Terminating!");	
+					succession = false;			
+			}
+			p++;
+		}
+		 
 	  	}
 	  	finally {
 	  		//close everything used
