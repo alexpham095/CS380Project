@@ -109,7 +109,7 @@ public static void logInfo() throws Exception{
   
   input = new BufferedReader(new InputStreamReader(sock.getInputStream()));	
 String username = input.readLine(); 
-  System.out.println("SERVER USER LOGIN: " + username );z
+  System.out.println("SERVER USER LOGIN: " + username );
   String password = input.readLine();
   if(username.equals(validUser) && password.equals(validPassword)){
    System.out.println("Welcome " + validUser + "!");
@@ -137,9 +137,6 @@ String username = input.readLine();
 
   		String ascii = input.readLine();
 		
-		String decrpy = "\nWould you like your data ascii armored? (y/n)";
-
-		String decode = input.readLine();
 	if(ascii.equals("y"))
 			asciiArmor = true;
 		else if(ascii.equals("n"))
