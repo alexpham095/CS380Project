@@ -72,15 +72,6 @@
 				asciiArmor = false;
 			output.println(ascii);
 			output.flush();
-			System.out.println("Would you like to decrypt the file?");			
-			String decode = reader.nextLine();
-			if(decode.equals("y"))
-				decrypt = true;
-			else
-				decrypt = false;
-			output.println(decode);
-			output.flush();
-	  		/////////
 				long start = System.currentTimeMillis();
 	  			do{					//conditional value is predetermined chunk size!!!
 					try{
