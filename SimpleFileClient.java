@@ -5,6 +5,8 @@
 	import javax.swing.JOptionPane;
 	import java.util.ArrayList;
 	import java.util.concurrent.TimeUnit;
+	import java.nio.charset.Charset;
+	import java.lang.Thread;
 
 	public class SimpleFileClient {
 
@@ -73,44 +75,54 @@
 			output.println(ascii);
 			output.flush();
 				long start = System.currentTimeMillis();
+				int counter = 0;
 	  			do{					//conditional value is predetermined chunk size!!!
-					try{
+					try{	
 						temp = is.readObject();	  				
 			 			byte[] receivedChunk  = (byte[])temp;						//reads next byte, .read() returns -1 if not byte is found
 						if(asciiArmor)
 							decryptor.asciiDecode(receivedChunk);
 						byte[] decrypted = decryptor.decrypt(receivedChunk);
-						String s = new String(decrypted);
+
+						String s = new String(decrypted, "UTF-8");
 						//System.out.println(s);
 						String[] result = s.split("%%");
-						if(Integer.parseInt(result[0]) != result[3].length()){
+						int headerLength = decrypted.length - Integer.parseInt(result[0]);
+						byte[] woheader = new byte[decrypted.length-headerLength];
+						//System.out.println(decrypted.length);
+						//System.out.println(counter);
+						counter++;				
+						for(int k = 0; k<woheader.length; k++){
+							woheader[k] = decrypted[k+headerLength];
+						}
+						//System.out.println(result[0] + "////" +woheader.length);
+						if(Integer.parseInt(result[0]) != woheader.length){
 							chunkSizeFail = true;
 							fail = true;
 						}
 						receivedBytes = Integer.parseInt(result[1]);
-						byte[] hashable = result[3].getBytes();	
+						byte[] hashable = woheader;
 						hashable = decryptor.hash(hashable);
 						String hashed = new String(hashable);
-						//System.out.println(result[2]+"/////"+hashed);
 						if(!result[2].equals(hashed)){
 							hashFail = true;
-							fail = true;
+							//fail = true;
 						}			
 						if(!fail){
-							byte[] output = result[3].getBytes();
+							byte[] output = woheader;
 							totalBytes += output.length;
 							bos.write(output, 0, output.length);
 							bos.flush();
 						}
 						else{
-	//						if(chunkSizeFail)
-							//	System.out.println("Chunk size incorrect!");
-	//						if(hashFail)
-							//	System.out.println("Hash incorrect!");
+							if(chunkSizeFail)
+								System.out.println("Chunk size incorrect!");
+							if(hashFail)
+								System.out.println("Hash incorrect!");
 						}
 					}catch (Exception e){
 						exit = true;					
-					}	 
+					} 
 	  			}while(!exit);
 				long end = System.currentTimeMillis();
 				long totalTime = TimeUnit.MILLISECONDS.toSeconds(end-start);
